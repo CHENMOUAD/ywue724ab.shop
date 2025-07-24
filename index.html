@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Smart Stock Signal Indicators - Data Analysis Service</title>
+    <style>
+        :root {
+            --primary-deep-blue: #003366;
+            --secondary-navy: #1a4d80;
+            --accent-gold: #FFD700;
+            --accent-amber: #FFA500;
+            --neutral-white: #FFFFFF;
+            --neutral-light-gray: #F8F9FA;
+            --text-primary: #003366;
+            --text-secondary: #1a4d80;
+            --shadow-primary: rgba(0, 51, 102, 0.15);
+            --shadow-secondary: rgba(0, 51, 102, 0.25);
+            --gradient-primary: linear-gradient(135deg, var(--primary-deep-blue) 0%, var(--secondary-navy) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-amber) 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--neutral-white);
+            overflow-x: hidden;
+        }
+
+        .page-disclaimer-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--gradient-primary);
+            color: var(--neutral-white);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 10px var(--shadow-primary);
+        }
+
+        .main-content-wrapper {
+            margin-top: 60px;
+            padding-bottom: 20px;
+        }
+
+        .hero-section-container {
+            background: var(--gradient-primary);
+            color: var(--neutral-white);
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-section-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content-inner {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-main-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle-text {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .content-section-block {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .content-section-block:nth-child(even) {
+            background: var(--neutral-light-gray);
+        }
+
+        .section-title-heading {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--primary-deep-blue);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .section-description-text {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            line-height: 1.8;
+            margin-bottom: 30px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .feature-list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .feature-item-card {
+            background: var(--neutral-white);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px var(--shadow-primary);
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-item-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .feature-item-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-item-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 20px 40px var(--shadow-secondary);
+        }
+
+        .feature-item-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-deep-blue);
+            margin-bottom: 15px;
+        }
+
+        .feature-item-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .image-display-container {
+            text-align: center;
+            margin: 50px 0;
+            position: relative;
+        }
+
+        .responsive-feature-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px var(--shadow-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .responsive-feature-image:hover {
+            transform: scale(1.02);
+        }
+
+        .cta-button-primary {
+            background: var(--gradient-accent);
+            color: var(--primary-deep-blue);
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            margin: 20px auto;
+            display: block;
+            min-width: 280px;
+        }
+
+        .cta-button-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .cta-button-primary:hover::before {
+            left: 100%;
+        }
+
+        .cta-button-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .testimonial-section-wrapper {
+            background: var(--gradient-primary);
+            color: var(--neutral-white);
+            padding: 80px 20px;
+        }
+
+        .testimonial-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .testimonial-card-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .testimonial-quote-text {
+            font-style: italic;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .testimonial-author-name {
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .final-cta-section {
+            background: var(--neutral-light-gray); 
+            text-align: center;
+        }
+
+        .whatsapp-floating-icon {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-icon-wrapper {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+            animation: pulse-breathing 2s infinite;
+        }
+
+        .whatsapp-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse-breathing 1.5s infinite;
+        }
+
+        .floating-bottom-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            padding: 15px;
+            background: var(--gradient-accent);
+        }
+
+        .floating-cta-button {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--primary-deep-blue);
+            color: var(--neutral-white);
+            padding: 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: pulse-breathing 3s infinite;
+            box-shadow: 0 8px 25px rgba(0, 51, 102, 0.4);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .floating-cta-button:hover {
+            background: var(--secondary-navy);
+            transform: translateY(-2px);
+        }
+
+        .footer-disclaimer-section {
+            background: var(--primary-deep-blue);
+            color: var(--neutral-white);
+            padding: 50px 20px 30px;
+            text-align: center;
+        }
+
+        .risk-warning-title {
+            color: var(--accent-gold);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .disclaimer-text-block {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .footer-links-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link-item {
+            color: var(--accent-gold);
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-link-item:hover {
+            opacity: 0.8;
+        }
+
+        .countdown-timer-container {
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            border: 2px solid var(--accent-gold);
+        }
+
+        .countdown-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .countdown-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: clamp(8px, 2vw, 15px);
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+
+        .countdown-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--neutral-white);
+            color: var(--primary-deep-blue);
+            padding: clamp(10px, 3vw, 15px) clamp(8px, 2vw, 10px);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: clamp(50px, 12vw, 70px);
+            flex-shrink: 0;
+        }
+
+        .countdown-number {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: 700;
+            line-height: 1;
+            animation: countdown-pulse 1s infinite;
+        }
+
+        .countdown-text {
+            font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .countdown-separator {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: 700;
+            color: var(--accent-gold);
+            animation: blink 1s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @keyframes pulse-breathing {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section-container {
+                padding: 60px 15px;
+            }
+            
+            .content-section-block {
+                padding: 60px 15px;
+            }
+            
+            .feature-list-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .whatsapp-floating-icon {
+                right: 20px;
+            }
+            
+            .floating-bottom-cta {
+                padding: 10px;
+            }
+            
+            .testimonial-grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-disclaimer-header">
+        【Data Analysis Service】This course only teaches data analysis methods, does not recommend any stocks, investment involves risks
+    </header>
+
+    <main class="main-content-wrapper">
+        <section class="hero-section-container">
+            <div class="hero-content-inner">
+                <h1 class="hero-main-title">Stock Investment New Era: Smart Signal Indicators</h1>
+                <p class="hero-subtitle-text">Are you feeling lost in the stock market?</p>
+                
+                <div class="countdown-timer-container">
+                    <div class="countdown-label">Limited Time Offer Expires In:</div>
+                    <div class="countdown-display">
+                        <div class="countdown-unit">
+                            <span id="days" class="countdown-number">02</span>
+                            <span class="countdown-text">Days</span>
+                        </div>
+                        <div class="countdown-separator">:</div>
+                        <div class="countdown-unit">
+                            <span id="hours" class="countdown-number">00</span>
+                            <span class="countdown-text">Hours</span>
+                        </div>
+                        <div class="countdown-separator">:</div>
+                        <div class="countdown-unit">
+                            <span id="minutes" class="countdown-number">00</span>
+                            <span class="countdown-text">Minutes</span>
+                        </div>
+                        <div class="countdown-separator">:</div>
+                        <div class="countdown-unit">
+                            <span id="seconds" class="countdown-number">00</span>
+                            <span class="countdown-text">Seconds</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="hero-subtitle-text">In the rapidly changing market, many people miss opportunities due to lack of information. Now, change your investment approach and embrace the new era of smart signals!</p>
+                <div class="image-display-container">
+                    <img src="img/1.jpg" alt="Smart Investment Technology" class="responsive-feature-image">
+                </div>
+                <button class="cta-button-primary" onclick="k2()">🚀 Start Your Smart Investment Journey ✨</button>
+            </div>
+        </section>
+
+        <section class="content-section-block">
+            <h2 class="section-title-heading">Common Investment Challenges</h2>
+            <div class="feature-list-container">
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">1. Missing Opportunities</h3>
+                    <p class="feature-item-description">Every day there are countless trading opportunities, but you don't know when to enter or exit. Many people miss the best timing due to hesitation, leading to losses or halved profits.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">2. Information Overload</h3>
+                    <p class="feature-item-description">News, social media, and analysis reports emerge endlessly, making it impossible for you to extract truly valuable investment signals. Faced with massive information, many investors feel overwhelmed.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">3. Lack of Experience</h3>
+                    <p class="feature-item-description">The threshold for stock investment seems high, and many beginners think they must have rich experience and professional knowledge to profit. This psychological barrier stops many people.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">4. Lack of Confidence</h3>
+                    <p class="feature-item-description">At critical moments, lack of reliable decision support leads to hesitation when buying or selling, ultimately choosing to wait and see, which is often the wrong choice.</p>
+                </div>
+            </div>
+            <div class="image-display-container">
+                <img src="img/2.jpg" alt="Market Analysis" class="responsive-feature-image">
+            </div>
+            <button class="cta-button-primary" onclick="k2()">📈 Master Market Pulse 💎</button>
+        </section>
+
+        <section class="content-section-block">
+            <h2 class="section-title-heading">Our Solution</h2>
+            <div class="feature-list-container">
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">1. Real-time Buy/Sell Alerts</h3>
+                    <p class="feature-item-description">The system automatically provides optimal buy and sell signals based on market dynamics, keeping you at the optimal decision point at all times. No matter how the market fluctuates, you can respond quickly.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">2. Data-Driven Analysis</h3>
+                    <p class="feature-item-description">Using big data and artificial intelligence technology, the system analyzes massive data in real-time, identifies potential investment opportunities, and provides precise market predictions to eliminate uncertainty in investment decisions.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">3. Historical Data Backtesting</h3>
+                    <p class="feature-item-description">Provides historical data backtesting functionality to help you verify signal effectiveness, enhance your investment confidence, and ensure every decision you make is based on evidence.</p>
+                </div>
+                <div class="feature-item-card">
+                    <h3 class="feature-item-title">4. Multi-dimensional Signal Analysis</h3>
+                    <p class="feature-item-description">Combines technical indicators, market sentiment, and trend analysis to provide multi-dimensional signal interpretation, helping you comprehensively understand market dynamics.</p>
+                </div>
+            </div>
+            <div class="image-display-container">
+                <img src="img/3.jpg" alt="Advanced Analytics" class="responsive-feature-image">
+            </div>
+            <button class="cta-button-primary" onclick="k2()">⚡ Seize Every Investment Opportunity, Experience Now 🎯</button>
+        </section>
+
+        <section class="testimonial-section-wrapper">
+            <div class="content-section-block">
+                <h2 class="section-title-heading" style="color: white;">Client Testimonials</h2>
+                <div class="testimonial-grid-layout">
+                    <div class="testimonial-card-item">
+                        <p class="testimonial-quote-text">"This system completely changed my trading approach. The real-time signals helped me capture market opportunities I would have missed before."</p>
+                        <p class="testimonial-author-name">- Sarah M., Portfolio Manager</p>
+                    </div>
+                    <div class="testimonial-card-item">
+                        <p class="testimonial-quote-text">"As a beginner, I was overwhelmed by market complexity. The data-driven insights gave me confidence to make informed decisions."</p>
+                        <p class="testimonial-author-name">- David L., Individual Investor</p>
+                    </div>
+                    <div class="testimonial-card-item">
+                        <p class="testimonial-quote-text">"The backtesting feature is invaluable. It showed me the effectiveness of signals before I committed real capital."</p>
+                        <p class="testimonial-author-name">- Jennifer W., Day Trader</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="final-cta-section">
+            <div class="content-section-block">
+                <h2 class="section-title-heading">Don't Hesitate Any Longer!</h2>
+                <p class="section-description-text">Register now to get a free trial experience and personally feel how smart signal indicators can change your investment journey.</p>
+                <button class="cta-button-primary" onclick="k2()">🎁 Start Free Trial Now! 🔥</button>
+                <br><br>
+                <h3 style="color: var(--primary-deep-blue); font-size: 2rem; margin-bottom: 20px;">Invest in the Future, Start Now!</h3>
+                <p class="section-description-text">Join us, unleash your investment potential, start your smart investment journey, and seize every wealth opportunity!</p>
+            </div>
+        </section>
+    </main>
+
+    <div class="whatsapp-floating-icon" onclick="k2()">
+        <div class="whatsapp-icon-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.520-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.051 3.706"/>
+            </svg>
+            <div class="whatsapp-notification-badge">1</div>
+        </div>
+    </div>
+
+    <div class="floating-bottom-cta">
+        <button class="floating-cta-button" onclick="k2()">Get Free Trial Access Now</button>
+    </div>
+
+    <footer class="footer-disclaimer-section">
+        <h3 class="risk-warning-title">⚠️ Important Risk Disclosure</h3>
+        <div class="disclaimer-text-block">*Trading in financial instruments carries a high level of risk to your capital with the possibility of losing more than your initial investment. Trading is not suitable for all investors, and you should ensure you understand the risks involved..</div>
+        <div class="disclaimer-text-block">*INVESTMENT ADVICE DISCLOSURE: The information provided does not constitute investment advice. Any reference to an investment's past or potential performance is not, and should not be construed as, a recommendation or as a guarantee of any specific outcome or profit..</div>
+        <div class="disclaimer-text-block">*You should consider your own financial situation, investment objectives, and seek independent advice if necessary. Always conduct your own research before making any investment decisions.</div>
+       
+        
+        <div class="footer-links-container">
+            <a href="Privacy.html" class="footer-link-item" target="_blank">Privacy Policy</a>
+            <a href="terms.html" class="footer-link-item" target="_blank">Terms of Service</a>
+			   <a href="Disclaimer.html" class="footer-link-item" target="_blank">Terms of Service</a>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.2); font-size: 12px; opacity: 0.7;">
+            <p>© 2024 Smart Signal Indicators. All Rights Reserved.</p>
+            <p>Licensed Financial Data Analysis Service Provider | Regulated Investment Education Platform</p>
+            <p>This service complies with US Financial Regulations and Google Financial Policies</p>
+        </div>
+    </footer>
+
+    <script>
+        function k2() {
+            window.open('https://wa.me/message', '_blank');
+        }
+
+        // Dark mode detection (if needed in future)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Countdown Timer Function
+        function startCountdown() {
+            const countdownDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000); // 2 days from now
+            
+            const timer = setInterval(function() {
+                const now = new Date().getTime();
+                const distance = countdownDate - now;
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById("days").innerHTML = days.toString().padStart(2, '0');
+                document.getElementById("hours").innerHTML = hours.toString().padStart(2, '0');
+                document.getElementById("minutes").innerHTML = minutes.toString().padStart(2, '0');
+                document.getElementById("seconds").innerHTML = seconds.toString().padStart(2, '0');
+                
+                if (distance < 0) {
+                    clearInterval(timer);
+                    document.getElementById("days").innerHTML = "00";
+                    document.getElementById("hours").innerHTML = "00";
+                    document.getElementById("minutes").innerHTML = "00";
+                    document.getElementById("seconds").innerHTML = "00";
+                }
+            }, 1000);
+        }
+
+        // Start countdown when page loads
+        startCountdown();
+
+        // Smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
